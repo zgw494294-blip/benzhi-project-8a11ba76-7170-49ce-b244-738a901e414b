@@ -1,6 +1,9 @@
 package domain
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // Error 是可稳定映射到 HTTP 响应的领域错误。
 type Error struct {
@@ -26,8 +29,9 @@ var (
 )
 
 func ErrorCode(err error) string {
-	if e, ok := err.(*Error); ok {
-		return e.Code
+	var domainError *Error
+	if errors.As(err, &domainError) {
+		return domainError.Code
 	}
 	return "internal_error"
 }

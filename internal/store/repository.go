@@ -95,8 +95,9 @@ func cloneCase(c domain.OralHistoryCase) (domain.OralHistoryCase, error) {
 }
 
 func errorResult(err error) storedResult {
-	if e, ok := err.(*domain.Error); ok {
-		return storedResult{ErrorCode: e.Code, ErrorMessage: e.Message}
+	var domainError *domain.Error
+	if errors.As(err, &domainError) {
+		return storedResult{ErrorCode: domainError.Code, ErrorMessage: domainError.Message}
 	}
 	return storedResult{ErrorCode: "internal_error", ErrorMessage: err.Error()}
 }
