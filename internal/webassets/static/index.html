@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>口述史资料公开授权工作台</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <header class="masthead">
+    <div><span class="eyebrow">ORAL HISTORY · ETHICS DESK</span><h1>口述史资料公开授权工作台</h1></div>
+    <div id="health" class="health">正在连接本地服务…</div>
+  </header>
+  <main>
+    <aside>
+      <button id="new-case" class="primary">＋ 新建案卷</button>
+      <h2>案卷</h2>
+      <div id="case-list" class="case-list"></div>
+    </aside>
+    <section class="workspace">
+      <div id="empty" class="empty"><strong>从一份口述资料开始</strong><span>建档后按同意、转写、治理、冻结与授权顺序推进。</span></div>
+      <div id="detail" hidden>
+        <div class="case-head"><div><span id="case-code" class="eyebrow"></span><h2 id="case-title"></h2></div><div><span id="case-state" class="state"></span><span id="case-revision"></span></div></div>
+        <div id="blockers" class="blockers"></div>
+        <nav class="steps">
+          <button data-panel="consent">1 同意核验</button><button data-panel="transcript">2 转写修订</button>
+          <button data-panel="governance">3 敏感治理</button><button data-panel="review">4 异议复核</button>
+          <button data-panel="release">5 冻结授权</button><button data-panel="audit">审计时间线</button>
+        </nav>
+        <div id="panels">
+          <section data-name="consent" class="panel"><h3>登记知情同意</h3><form id="consent-form">
+            <label>证据引用<input name="evidenceRef" value="consent://signed-form/001" required></label>
+            <label>允许受众（逗号分隔）<input name="audiences" value="公众" required></label>
+            <label>允许用途（逗号分隔）<input name="purposes" value="学术研究" required></label>
+            <label>生效时间<input name="effectiveAt" type="datetime-local" required></label>
+            <label>失效时间<input name="expiresAt" type="datetime-local" required></label>
+            <button class="primary">登记并核验覆盖</button></form><div id="consents" class="cards"></div></section>
+          <section data-name="transcript" class="panel" hidden><h3>提交不可变转写版本</h3><form id="transcript-form">
+            <label>基线版本<input name="baseVersionId" placeholder="首版留空"></label>
+            <label>提交人<input name="actor" value="档案整理员" required></label>
+            <label>片段 JSON<textarea name="segments" rows="8" required>[{"id":"seg-1","startMs":0,"endMs":5000,"text":"受访者讲述了村落技艺的传承。"}]</textarea></label>
+            <button class="primary">提交新版本</button></form><div id="transcripts" class="cards"></div><pre id="diff"></pre></section>
+          <section data-name="governance" class="panel" hidden><h3>敏感片段处置</h3><form id="finding-form">
+            <label>转写版本 ID<input name="transcriptVersionId" required></label><label>片段 ID<input name="segmentId" required></label>
+            <label>风险类别<input name="category" value="个人隐私" required></label><label>风险说明<textarea name="riskReason" required>包含可识别第三人的细节</textarea></label>
+            <label>遮蔽方案<textarea name="redactionProposal">公开版以匿名编号替代姓名</textarea></label>
+            <label>批量条目 JSON（可选）<textarea name="batchItems" rows="4" placeholder='[{"id":"f-1","segmentId":"seg-1","category":"个人隐私","riskReason":"包含姓名","redactionProposal":"匿名化"}]'></textarea></label>
+            <button class="primary">登记敏感项</button>
+          </form><div id="findings" class="cards"></div></section>
+          <section data-name="review" class="panel" hidden><h3>退回与整改复核</h3><form id="objection-form">
+            <label>关联敏感项 ID<input name="findingId"></label><label>具体异议<textarea name="reason" required>需补充匿名化证据后再公开</textarea></label>
+            <label>复核员<input name="actor" value="伦理复核员" required></label><button class="danger">退回异议</button>
+          </form><div id="objections" class="cards"></div></section>
+          <section data-name="release" class="panel" hidden><h3>冻结与公开授权</h3><div class="actions">
+            <button id="freeze" class="primary">冻结唯一候选版本</button><button id="authorize" class="primary">签发公开授权凭据</button>
+          </div><pre id="manifest"></pre><div id="credentials" class="cards"></div></section>
+          <section data-name="audit" class="panel" hidden><h3>连续审计时间线</h3><ol id="audits" class="timeline"></ol></section>
+        </div>
+      </div>
+    </section>
+  </main>
+  <dialog id="create-dialog"><form id="create-form"><h2>建立口述史案卷</h2>
+    <label>资料标题<input name="title" required></label><label>责任单位<input name="collectionUnit" required></label>
+    <label>受访者匿名编号<input name="intervieweeCode" required></label><label>来源登记<input name="sourceRef" required></label>
+    <label>拟公开受众<input name="audiences" value="公众" required></label><label>拟公开用途<input name="purposes" value="学术研究" required></label>
+    <div class="actions"><button type="button" data-close>取消</button><button class="primary">创建草稿</button></div></form></dialog>
+  <div id="toast" role="status"></div>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
