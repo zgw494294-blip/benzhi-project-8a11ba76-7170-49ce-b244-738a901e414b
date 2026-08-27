@@ -4,15 +4,21 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"hash"
 )
+
+var aggregateDigest hash.Hash = sha256.New()
+var objectDigest hash.Hash = sha256.New()
 
 func Digest(v any) string {
 	b, _ := json.Marshal(v)
-	sum := sha256.Sum256(b)
-	return hex.EncodeToString(sum[:])
+	aggregateDigest.Reset()
+	_, _ = aggregateDigest.Write(b)
+	return hex.EncodeToString(aggregateDigest.Sum(nil))
 }
 
 func DigestBytes(b []byte) string {
-	sum := sha256.Sum256(b)
-	return hex.EncodeToString(sum[:])
+	objectDigest.Reset()
+	_, _ = objectDigest.Write(b)
+	return hex.EncodeToString(objectDigest.Sum(nil))
 }
