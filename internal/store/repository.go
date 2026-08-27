@@ -8,14 +8,18 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/benzhi/oral-history-release/internal/domain"
 )
 
 type Repository struct {
-	root  string
-	locks caseLocks
+	root           string
+	locks          caseLocks
+	listMu         sync.RWMutex
+	listCache      []domain.OralHistoryCase
+	listCacheReady bool
 }
 
 func Open(root string) (*Repository, error) {
@@ -221,6 +225,14 @@ func (r *Repository) Get(caseID string) (*domain.OralHistoryCase, []domain.Audit
 }
 
 func (r *Repository) List() ([]domain.OralHistoryCase, error) {
+	r.listMu.RLock()
+	if r.listCacheReady {
+		cached := append([]domain.OralHistoryCase(nil), r.listCache...)
+		r.listMu.RUnlock()
+		return cached, nil
+	}
+	r.listMu.RUnlock()
+
 	entries, err := os.ReadDir(filepath.Join(r.root, "cases"))
 	if err != nil {
 		return nil, err
@@ -238,5 +250,13 @@ func (r *Repository) List() ([]domain.OralHistoryCase, error) {
 		result = append(result, *caseFile)
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].UpdatedAt.After(result[j].UpdatedAt) })
-	return result, nil
+
+	r.listMu.Lock()
+	if !r.listCacheReady {
+		r.listCache = append([]domain.OralHistoryCase(nil), result...)
+		r.listCacheReady = true
+	}
+	cached := append([]domain.OralHistoryCase(nil), r.listCache...)
+	r.listMu.Unlock()
+	return cached, nil
 }
