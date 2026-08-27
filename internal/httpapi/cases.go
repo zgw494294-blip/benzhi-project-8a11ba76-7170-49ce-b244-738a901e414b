@@ -92,7 +92,7 @@ func (a *API) WithdrawConsentHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	body, err := a.service.WithdrawConsent(caseID, consentID, command)
+	body, err := a.service.WithdrawConsentContext(r.Context(), caseID, consentID, command)
 	if err != nil {
 		writeError(w, err)
 		return

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -109,6 +110,14 @@ func restoreResult(stored storedResult, cached bool) Result {
 }
 
 type Mutation func(*domain.OralHistoryCase) (any, error)
+
+// ExecuteContext 把 mutation 与调用方生命周期关联。
+func (r *Repository) ExecuteContext(ctx context.Context, caseID string, expectedRevision int64, idempotencyKey, action, actor string, now time.Time, mutation Mutation) Result {
+	if err := ctx.Err(); err != nil {
+		return Result{Err: err}
+	}
+	return r.Execute(caseID, expectedRevision, idempotencyKey, action, actor, now, mutation)
+}
 
 func (r *Repository) Create(c *domain.OralHistoryCase, idempotencyKey, actor string, now time.Time) Result {
 	if err := validateID(c.ID); err != nil {

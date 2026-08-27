@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 
@@ -45,7 +46,11 @@ func (s *Service) Authorize(caseID string, command AuthorizeCommand) (json.RawMe
 }
 
 func (s *Service) WithdrawConsent(caseID, consentID string, command WithdrawConsentCommand) (json.RawMessage, error) {
-	return s.execute(caseID, "withdraw_consent", command.CommandMeta, func(c *domain.OralHistoryCase) (any, error) {
+	return s.WithdrawConsentContext(context.Background(), caseID, consentID, command)
+}
+
+func (s *Service) WithdrawConsentContext(ctx context.Context, caseID, consentID string, command WithdrawConsentCommand) (json.RawMessage, error) {
+	return s.executeContext(ctx, caseID, "withdraw_consent", command.CommandMeta, func(c *domain.OralHistoryCase) (any, error) {
 		if err := c.WithdrawConsent(consentID, s.now()); err != nil {
 			return nil, err
 		}

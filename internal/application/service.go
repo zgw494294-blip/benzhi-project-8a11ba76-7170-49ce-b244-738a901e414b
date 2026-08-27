@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -18,10 +19,14 @@ func NewService(repository *store.Repository) *Service {
 }
 
 func (s *Service) execute(caseID, action string, meta CommandMeta, mutation store.Mutation) (json.RawMessage, error) {
+	return s.executeContext(context.Background(), caseID, action, meta, mutation)
+}
+
+func (s *Service) executeContext(ctx context.Context, caseID, action string, meta CommandMeta, mutation store.Mutation) (json.RawMessage, error) {
 	if err := meta.Validate(); err != nil {
 		return nil, err
 	}
-	result := s.repository.Execute(caseID, meta.ExpectedRevision, meta.IdempotencyKey, action, meta.Actor, s.now(), mutation)
+	result := s.repository.ExecuteContext(ctx, caseID, meta.ExpectedRevision, meta.IdempotencyKey, action, meta.Actor, s.now(), mutation)
 	return result.Body, result.Err
 }
 
