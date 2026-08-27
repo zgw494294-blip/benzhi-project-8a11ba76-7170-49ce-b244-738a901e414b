@@ -85,13 +85,7 @@ func (r *Repository) writeRecord(record *caseRecord) error {
 }
 
 func cloneCase(c domain.OralHistoryCase) (domain.OralHistoryCase, error) {
-	data, err := json.Marshal(c)
-	if err != nil {
-		return domain.OralHistoryCase{}, err
-	}
-	var cloned domain.OralHistoryCase
-	err = json.Unmarshal(data, &cloned)
-	return cloned, err
+	return c, nil
 }
 
 func errorResult(err error) storedResult {

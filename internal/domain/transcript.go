@@ -48,9 +48,6 @@ func (c *OralHistoryCase) SubmitTranscript(version TranscriptVersion, now time.T
 	if latest == nil && version.BaseVersionID != "" {
 		return Invalid("baseVersionId", "首个版本不得指定基线")
 	}
-	if latest != nil && version.BaseVersionID != latest.ID {
-		return Invalid("baseVersionId", "必须引用当前最新转写版本")
-	}
 	for _, existing := range c.Transcripts {
 		if existing.ID == version.ID {
 			return Invalid("transcriptId", "已经存在")
@@ -73,6 +70,9 @@ func (c *OralHistoryCase) SubmitTranscript(version TranscriptVersion, now time.T
 				}
 			}
 		}
+	}
+	if latest != nil && version.BaseVersionID != latest.ID {
+		return Invalid("baseVersionId", "必须引用当前最新转写版本")
 	}
 	c.Transcripts = append(c.Transcripts, version)
 	c.Touch(now)
