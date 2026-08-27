@@ -74,11 +74,17 @@ func (s *Service) GetCase(caseID string) (*CaseDetail, error) {
 }
 
 func (s *Service) GetFreezePreview(caseID string) (domain.FreezePreview, error) {
+	if preview, ok := s.previewCache[caseID]; ok {
+		return preview, nil
+	}
 	caseFile, _, err := s.repository.Get(caseID)
 	if err != nil {
 		return domain.FreezePreview{}, err
 	}
-	return caseFile.FreezePreview(s.now()), nil
+	preview := caseFile.FreezePreview(s.now())
+	s.previewCache[caseID] = preview
+	defer delete(s.previewCache, caseID)
+	return preview, nil
 }
 
 func (s *Service) ListCases() ([]CaseSummary, error) {

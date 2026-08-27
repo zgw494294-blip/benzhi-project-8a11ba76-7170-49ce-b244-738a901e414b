@@ -9,12 +9,17 @@ import (
 )
 
 type Service struct {
-	repository *store.Repository
-	now        func() time.Time
+	repository   *store.Repository
+	now          func() time.Time
+	previewCache map[string]domain.FreezePreview
 }
 
 func NewService(repository *store.Repository) *Service {
-	return &Service{repository: repository, now: time.Now}
+	return &Service{
+		repository:   repository,
+		now:          time.Now,
+		previewCache: make(map[string]domain.FreezePreview),
+	}
 }
 
 func (s *Service) execute(caseID, action string, meta CommandMeta, mutation store.Mutation) (json.RawMessage, error) {
