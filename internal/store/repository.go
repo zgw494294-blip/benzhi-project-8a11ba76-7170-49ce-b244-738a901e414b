@@ -101,6 +101,13 @@ func errorResult(err error) storedResult {
 	return storedResult{ErrorCode: "internal_error", ErrorMessage: err.Error()}
 }
 
+func contextualMutationError(caseID, action string, err error) error {
+	if err == nil {
+		return nil
+	}
+	return fmt.Errorf("案卷 %s 的 %s 操作失败: %w", caseID, action, err)
+}
+
 func restoreResult(stored storedResult, cached bool) Result {
 	if stored.ErrorCode != "" {
 		return Result{Err: domain.NewError(stored.ErrorCode, stored.ErrorMessage), FromCache: cached}
@@ -183,7 +190,8 @@ func (r *Repository) Execute(caseID string, expectedRevision int64, idempotencyK
 	}
 	value, mutationErr := mutation(&cloned)
 	if mutationErr != nil {
-		stored := errorResult(mutationErr)
+		contextualErr := contextualMutationError(caseID, action, mutationErr)
+		stored := errorResult(contextualErr)
 		record.Idempotency[cacheKey] = stored
 		appendAudit("rejected:"+stored.ErrorCode, domain.Digest(stored))
 		if err := r.writeRecord(record); err != nil {
