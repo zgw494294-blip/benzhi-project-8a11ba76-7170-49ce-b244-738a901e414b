@@ -48,7 +48,16 @@ func (r *Repository) persistObjects(c *domain.OralHistoryCase) ([]string, error)
 		digest := domain.DigestBytes(payload)
 		digests = append(digests, digest)
 		path := filepath.Join(r.root, "objects", digest+".json")
+		r.objectMu.Lock()
+		_, known := r.knownObject[path]
+		r.objectMu.Unlock()
+		if known {
+			continue
+		}
 		if _, err := os.Stat(path); err == nil {
+			r.objectMu.Lock()
+			r.knownObject[path] = struct{}{}
+			r.objectMu.Unlock()
 			continue
 		} else if !os.IsNotExist(err) {
 			return nil, err
@@ -61,6 +70,9 @@ func (r *Repository) persistObjects(c *domain.OralHistoryCase) ([]string, error)
 		if err := atomicWrite(path, data, 0o640); err != nil {
 			return nil, err
 		}
+		r.objectMu.Lock()
+		r.knownObject[path] = struct{}{}
+		r.objectMu.Unlock()
 	}
 	return digests, nil
 }

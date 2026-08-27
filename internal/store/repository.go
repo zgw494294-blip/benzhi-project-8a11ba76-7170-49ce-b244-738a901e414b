@@ -8,21 +8,24 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/benzhi/oral-history-release/internal/domain"
 )
 
 type Repository struct {
-	root  string
-	locks caseLocks
+	root        string
+	locks       caseLocks
+	objectMu    sync.Mutex
+	knownObject map[string]struct{}
 }
 
 func Open(root string) (*Repository, error) {
 	if strings.TrimSpace(root) == "" {
 		return nil, fmt.Errorf("数据目录不能为空")
 	}
-	r := &Repository{root: filepath.Clean(root)}
+	r := &Repository{root: filepath.Clean(root), knownObject: make(map[string]struct{})}
 	for _, dir := range []string{"cases", "objects"} {
 		if err := os.MkdirAll(filepath.Join(r.root, dir), 0o750); err != nil {
 			return nil, err
