@@ -2,6 +2,7 @@ package application
 
 import (
 	"encoding/json"
+	"sync"
 	"time"
 
 	"github.com/benzhi/oral-history-release/internal/domain"
@@ -9,12 +10,18 @@ import (
 )
 
 type Service struct {
-	repository *store.Repository
-	now        func() time.Time
+	repository        *store.Repository
+	now               func() time.Time
+	verificationMu    sync.RWMutex
+	verificationCache map[string]cachedCredentialVerification
 }
 
 func NewService(repository *store.Repository) *Service {
-	return &Service{repository: repository, now: time.Now}
+	return &Service{
+		repository:        repository,
+		now:               time.Now,
+		verificationCache: make(map[string]cachedCredentialVerification),
+	}
 }
 
 func (s *Service) execute(caseID, action string, meta CommandMeta, mutation store.Mutation) (json.RawMessage, error) {

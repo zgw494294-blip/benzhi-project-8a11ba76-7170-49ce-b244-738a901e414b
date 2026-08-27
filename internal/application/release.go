@@ -7,6 +7,11 @@ import (
 	"github.com/benzhi/oral-history-release/internal/domain"
 )
 
+type cachedCredentialVerification struct {
+	revision int64
+	result   domain.CredentialVerification
+}
+
 func (s *Service) Freeze(caseID string, command FreezeCommand) (json.RawMessage, error) {
 	if strings.TrimSpace(command.ConfirmedManifestDigest) == "" {
 		return nil, domain.Invalid("confirmedManifestDigest", "必须确认冻结候选摘要")
@@ -58,5 +63,15 @@ func (s *Service) VerifyCredential(caseID, credentialID string) (domain.Credenti
 	if err != nil {
 		return domain.CredentialVerification{}, err
 	}
-	return caseFile.VerifyCredential(credentialID, s.now()), nil
+	s.verificationMu.RLock()
+	cached, ok := s.verificationCache[credentialID]
+	s.verificationMu.RUnlock()
+	if ok && cached.revision == caseFile.Revision {
+		return cached.result, nil
+	}
+	result := caseFile.VerifyCredential(credentialID, s.now())
+	s.verificationMu.Lock()
+	s.verificationCache[credentialID] = cachedCredentialVerification{revision: caseFile.Revision, result: result}
+	s.verificationMu.Unlock()
+	return result, nil
 }
