@@ -37,6 +37,19 @@ func evidenceObjects(c *domain.OralHistoryCase) []evidenceObject {
 	return objects
 }
 
+func objectDigests(c *domain.OralHistoryCase) ([]string, error) {
+	objects := evidenceObjects(c)
+	digests := make([]string, 0, len(objects))
+	for _, object := range objects {
+		payload, err := json.Marshal(object.Payload)
+		if err != nil {
+			return nil, err
+		}
+		digests = append(digests, domain.DigestBytes(payload))
+	}
+	return digests, nil
+}
+
 func (r *Repository) persistObjects(c *domain.OralHistoryCase) ([]string, error) {
 	objects := evidenceObjects(c)
 	digests := make([]string, 0, len(objects))

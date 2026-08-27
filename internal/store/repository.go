@@ -70,7 +70,7 @@ func (r *Repository) readRecord(caseID string) (*caseRecord, error) {
 }
 
 func (r *Repository) writeRecord(record *caseRecord) error {
-	digests, err := r.persistObjects(&record.Aggregate)
+	digests, err := objectDigests(&record.Aggregate)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,11 @@ func (r *Repository) writeRecord(record *caseRecord) error {
 	if err != nil {
 		return err
 	}
-	return atomicWrite(r.casePath(record.Aggregate.ID), data, 0o640)
+	if err := atomicWrite(r.casePath(record.Aggregate.ID), data, 0o640); err != nil {
+		return err
+	}
+	_, err = r.persistObjects(&record.Aggregate)
+	return err
 }
 
 func cloneCase(c domain.OralHistoryCase) (domain.OralHistoryCase, error) {
